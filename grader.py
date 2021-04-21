@@ -136,6 +136,53 @@ def write_to_grade_file(formatted_students, formatted_answers, grade_infile,
     return formatted_students, answer_key, score
 
 
+def validate_id(formatted_students, error_infile):
+    '''
+    Validates the student's ID. if Id is not valid, it It will be saved
+    and written to the error.txt file.
+    '''
+    counter = 0
+    stud_id = []
+    message = ''
+    while counter < len(formatted_students):
+        stud_id = [i for i in formatted_students[counter][0]]
+
+        if len(formatted_students[counter][0]) != 6:
+            message = formatted_students[counter][0] + \
+                'is invalid: ID is not 6 characters in length.\n'
+
+        if not (stud_id[0].isalpha() and stud_id[1].isalpha()):
+            message = formatted_students[counter][0] + \
+                'is invalid: The first two characters must be letters.\n'
+
+        if not (stud_id[2].isdigit() and stud_id[3].isdigit() and
+                stud_id[4].isdigit() and stud_id[5].isdigit()):
+            message = formatted_students[counter][0] + \
+                'is invalid: The last four characters must be numbers.\n'
+
+        unique_char = set(stud_id)
+
+        if len(unique_char) != 6:
+            message = formatted_students[counter][0] + \
+                'is invalid: The characters in the ID are not unique.\n'
+
+        error_infile.writelines(message)
+
+        counter += 1
+
+
+def open_error_file():
+    '''
+    Checks if file is already created and deletes it if it is.
+    Creates and opens the errors file to write to it.
+    '''
+    delete_file_if_exists(ERROR_FILE)
+
+    error_infile = open(ERROR_FILE, 'w')
+
+    return error_infile
+
+
 def open_tests_file():
     '''
     Opens tests file
@@ -200,6 +247,10 @@ def main():
     format_list_students(students)
 
     formatted_students = students
+
+    error_infile = open_error_file()
+
+    validate_id(formatted_students, error_infile)
 
     write_to_grade_file(formatted_students, formatted_answers, grade_infile,
                         answer_key, score)
