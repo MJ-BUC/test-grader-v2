@@ -96,7 +96,7 @@ def format_list_students(students):
 
 
 def write_to_grade_file(formatted_students, formatted_answers, grade_infile,
-                        answer_key, score):
+                        error_infile, answer_key, score, message):
     '''
     loops over every item in the list of formatted answers
     and changes the index of list. Then writes the Names, score, and grade to the file.
@@ -132,43 +132,50 @@ def write_to_grade_file(formatted_students, formatted_answers, grade_infile,
             answer_items += 1
 
             counter += 1
+    error_infile.writelines(message)  # write errors to file.
     grade_infile.close()
     return formatted_students, answer_key, score
 
 
-def validate_id(formatted_students, error_infile):
+def validate_id(formatted_students, message):
     '''
-    Validates the student's ID. if Id is not valid, it It will be saved
-    and written to the error.txt file.
+    Validates the student's ID. if Id is not valid, it will be saved
+    and written to the error.txt file. Checks entire file for errors before
+    writing to files.
     '''
     counter = 0
     stud_id = []
-    message = ''
+
     while counter < len(formatted_students):
         stud_id = [i for i in formatted_students[counter][0]]
 
+        if stud_id == formatted_students[counter]:
+            message += formatted_students[counter][0]
+
         if len(formatted_students[counter][0]) != 6:
-            message = formatted_students[counter][0] + \
-                'is invalid: ID is not 6 characters in length.\n'
+            message += formatted_students[counter][0] + \
+                ' is invalid: ID is not 6 characters in length.\n'
 
         if not (stud_id[0].isalpha() and stud_id[1].isalpha()):
-            message = formatted_students[counter][0] + \
-                'is invalid: The first two characters must be letters.\n'
+            message += formatted_students[counter][0] + \
+                ' is invalid: The first two characters must be letters.\n'
 
-        if not (stud_id[2].isdigit() and stud_id[3].isdigit() and
-                stud_id[4].isdigit() and stud_id[5].isdigit()):
-            message = formatted_students[counter][0] + \
-                'is invalid: The last four characters must be numbers.\n'
+        digit_counter = 2
+        while digit_counter < len(stud_id):
+            if not stud_id[digit_counter].isdigit():
+                message += formatted_students[counter][0] + \
+                    ' is invalid: The last four characters must be numbers.\n'
+                digit_counter += len(stud_id)
+            digit_counter += 1
 
-        unique_char = set(stud_id)
+        unique_char = list(dict.fromkeys(stud_id))
 
-        if len(unique_char) != 6:
-            message = formatted_students[counter][0] + \
-                'is invalid: The characters in the ID are not unique.\n'
-
-        error_infile.writelines(message)
+        if unique_char != stud_id:
+            message += formatted_students[counter][0] + \
+                ' is invalid: The characters in the ID are not unique.\n'
 
         counter += 1
+    return message
 
 
 def open_error_file():
@@ -250,10 +257,12 @@ def main():
 
     error_infile = open_error_file()
 
-    validate_id(formatted_students, error_infile)
+    message = ''
 
-    write_to_grade_file(formatted_students, formatted_answers, grade_infile,
-                        answer_key, score)
+    message = validate_id(formatted_students, message)
+
+    write_to_grade_file(formatted_students, formatted_answers, grade_infile, error_infile,
+                        answer_key, score, message)
 
 
 if __name__ == '__main__':
