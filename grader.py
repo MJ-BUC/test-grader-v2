@@ -1,7 +1,7 @@
 '''
 This is a program that grades tests from a text file and outputs
 the first name, last name, test score, and letter grade to a 
-new text file.
+new text file. Version 2
 '''
 import os
 
